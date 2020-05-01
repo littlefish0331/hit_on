@@ -1,0 +1,258 @@
+---
+title: "hit_on_dictionary"
+author: "Author: [Steve, Yu](https://github.com/littlefish0331)"
+date: "`r Sys.setlocale('LC_TIME', 'English'); format(Sys.time(), '%Y %b %d %a, %H:%M:%S')`" 
+output: 
+  bookdown::html_document2:
+    css: style.css
+    code_folding: show
+    df_print: default
+    toc: TRUE
+    toc_depth: 3
+    toc_float:
+      collapsed: TRUE
+      smooth_scroll: TRUE
+    theme: darkly
+    # theme: lumen
+    # keep_md: TRUE
+---
+
+```{r setup, echo=TRUE, message=FALSE, warning=FALSE, results='hide'}
+rm(list = ls()); gc()
+library(knitr)
+library(kableExtra)
+library(dplyr)
+library(data.table)
+library(httr)
+library(jsonlite)
+library(tmcn)
+library(Nippon)
+knitr::opts_chunk$set(
+	# 這邊是針對所有chunk的設定
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+File Target
+===
+
+把這個 API 上面的資料通通抓下來。  
+簡體(用語)轉換的選項: opencc(ropencc)、繁化姬API、tmcn::toTrad
+
+
+
+
+## 整理的資料版本有四種
+
+**hit_on.txt**
+
+- 每次 request 50 條撩妹語句(渣男-說話的藝術)
+- 讀取 hit_on.txt，做搜尋比對。如果一開始沒有txt就先跳過。
+- 將沒有比對到的句子，append到 hit_on.txt。
+- 如果連續100次都全部比對到，搜尋停止。
+- 整個流程結束後，未來有新資料另存到 hit_on_new.txt
+
+**hit_on_opencc_S2TWP.txt**
+
+- 讀取 hit_on.txt。(以後讀取 hit_on_new.txt)
+- 簡體轉繁體: 利用 opencc 模組。(github下載，透過wsl的ubuntu編譯，目前仍不斷更新維護)
+- append 到 hit_on_opencc_S2TWP.txt。
+
+**hit_on_繁化姬.txt**
+
+- 讀取 hit_on.txt。(以後讀取 hit_on_new.txt)
+- 簡體轉繁體: 利用 繁化姬API。
+- append 到 hit_on_opencc_S2TWP.txt。
+
+**hit_on_opecc_S2TWP_繁化姬.txt**
+
+- 讀取 hit_on.txt。(以後讀取 hit_on_new.txt)
+- 簡體轉繁體: 利用 opencc 模組 + 繁化姬API
+- append 到 hit_on_opecc_S2TWP_繁化姬.txt。
+
+
+
+
+
+## 未來展望
+
+**未來工作**
+
+- 全形轉半形。比如: ？轉換?
+- 特殊符號轉換，可能要研究必建立一個轉換字典。比如: “”轉換「」
+
+**研究心得**
+
+opencc vs 繁化姬
+
+- 兩者都仍在更新與維護
+- opencc維護者的回應比較快，感覺有專人負責。繁化姬維護者應該是一個人且夜貓子XD
+- opencc最後一次的軟體編譯是2016的1.0.4版本，之後的版本都要自行編譯。ropencc則是2017年。
+- 繁化姬最後更新為2019年。
+- 我的建議是，使用opencc的S2TWP轉換後，再用繁化姬轉一次。
+  - 完成，並寫成 function，見 opencc_zh。
+
+- opencc
+  - telegram上維護者有幫忙做一個界面，如果有多個選項，可以手動選擇。
+  - opencc-優點
+    - 是一開始的目標就是通用的簡繁轉換，所以很general的場景都可使用。
+    - 有考量執行速度。
+    - 大神BYVoid的作品。
+    - github上面的字典是很完整的，也有保留一簡對多繁的字典，所以可以自己做調整。
+  - opencc-缺點
+    - 目前沒有做語意判斷，所以在一簡對多繁的情況下，自動轉換時只會機械地使用第一個。
+    - 沒有語意字典，比如視頻聊天應轉換為視訊聊天。(畢竟要做語意字典，例外太多了)
+
+- 繁化姬-優點
+  - 是主要針對動畫情境，所以在特定領域上，表現不錯。
+  - 有做字幕檔的需求，檔案類型、時間軸功能等等。
+  - 多語言的轉換，比如日語等。
+  - 肥宅社群很踴躍，大家會幫忙喜歡的動畫做字典，人物名稱判斷與對應等。
+  - 有語意字典，經過測試，並非語意判斷。比如"視頻聊天"，會變成"視訊聊天"，但是"視頻聊一下天"，仍為"影片聊一下天"。語意字典靠社群提供，維護者新增。
+- 繁化姬-缺點
+  - 目前沒有做語意判斷。
+  - 錯誤率仍高，畢竟不是專注於所有領域用詞，字典可能沒有opencc完善。
+
+\newpage
+
+原始資料-hit_on.txt
+===
+
+```{r eval = F}
+tmp01_get <- GET("https://api.lovelive.tools/api/SweetNothings/Serialization/json/50")
+tmp02_tochar <- rawToChar(tmp01_get$content) %>% iconv(., from = "UTF-8", "UTF-8")
+tmp03_json <- fromJSON(tmp02_tochar)
+# tmp03_json$code #確認爬取資訊
+tmp04 <- tmp03_json$returnObj
+
+# ---
+# save in local 
+tmp <- data.table(zh_CN = tmp04)
+fwrite(x = tmp, file = "../data_from_api/hit_on.txt",
+       row.names = F, col.names = F, )
+
+# ---
+# 讀取資料
+tmp <- readLines(con = "../data_from_api/hit_on.txt")
+# tmp[1] %>% iconv(., from = "UTF-8", to = "UTF-8") #單獨轉換
+Encoding(tmp) <- "UTF-8" #整體轉換
+tmp[1]
+
+# ---
+# sleep
+Sys.sleep(0.8)
+```
+
+## 排成-程式碼彙整
+
+hit_on.R
+
+```{r}
+# 以後要改成存入 hit_on_new.txt，最下面的save增加append = T。
+# ---
+# 讀取舊資料
+tt <- file.exists("../data_from_api/hit_on.txt")
+if (tt) {
+  tmp_past <- readLines(con = "../data_from_api/hit_on.txt")
+  Encoding(tmp_past) <- "UTF-8"
+} else {tmp_past <- NULL}
+tmp_past[1]
+
+# ---
+repeat_times <- 1
+while (repeat_times<=100) {
+  # ---
+  # 爬蟲
+  # 轉換編碼
+  # 轉換格式
+  tmp01_get <- GET("https://api.lovelive.tools/api/SweetNothings/Serialization/json/100")
+  tmp02_tochar <- rawToChar(tmp01_get$content) %>% iconv(., from = "UTF-8", "UTF-8")
+  tmp03_json <- fromJSON(tmp02_tochar)
+  
+  # ---
+  # 如果爬太快，導致爬取失敗，就停止久一點
+  if (tmp03_json$code!=200) {
+    repeat_times <- repeat_times + 1
+    Sys.sleep(1)
+    next
+  }
+  
+  # ---
+  # 內容抓出來
+  # 和之前比對
+  # 都相同就跳出，有不同的就append上去。
+  tmp04 <- tmp03_json$returnObj
+  idx <- !(tmp04 %in% tmp_past)
+  if (sum(idx)==0) {
+    repeat_times <- repeat_times + 1
+    Sys.sleep(0.1)
+    next
+  } else { 
+    repeat_times <- 1
+    tmp_past <- c(tmp_past, tmp04[!(tmp04 %in% tmp_past)]) 
+  }
+  Sys.sleep(0.1)
+}
+
+
+# ---
+# save in local 
+tmp <- data.table(zh_CN = tmp_past)
+fwrite(x = tmp, file = "../data_from_api/hit_on.txt",
+       row.names = F, col.names = F, quote = F)
+       # row.names = F, col.names = F, append = T)
+```
+
+
+
+
+```{r}
+# 
+tmp01$content %>% cat
+tmp01$content %>% paste0(., collapse = "")
+"餘生" %>% charToRaw()
+# be 6c a5 cd
+# e9 a4 98 e7 94 9f
+
+c("e9", "a4", "98", "e7", "94", "9f") %>% hex2raw()
+s <- 'e9a498e7949f'
+s <- 'be6ca5cd'
+s <- '20'
+s <- '7b0a2020202022636f6465223a20302c0a202020202264617461223a207b0a202020202020202022636f6e766572746572223a202254616977616e222c0a20202020202020202274657874223a2022e9a498e7949f222c0a20202020202020202264696666223a206e756c6c2c0a20202020202020202274657874466f726d6174223a2022506c61696e54657874222c0a202020202020202022757365644d6f64756c6573223a205b0a20202020202020202020202022556e6974222c0a202020202020202020202020225479706f222c0a20202020202020202020202022496e7465726e6574536c616e67222c0a20202020202020202020202022536d6f6f7468222c0a2020202020202020202020202247616e546f5a756f222c0a20202020202020202020202022526570656174222c0a202020202020202020202020225265706561744175746f466978222c0a2020202020202020202020202250726f7065724e6f756e220a20202020202020205d2c0a2020202020202020226a70546578745374796c6573223a205b5d0a202020207d2c0a20202020226d7367223a2022222c0a20202020227265766973696f6e73223a207b0a2020202020202020226275696c64223a2022646963742d38306362386665352d72393239222c0a2020202020202020226d7367223a20226669783a20e4be8be8a18ce680a7e4bfaee6ada3e5ad97e8a99e203230323030343035222c0a20202020202020202274696d65223a20313538363137373339360a202020207d2c0a20202020226578656354696d65223a20302e3032380a7d'
+h <- sapply(seq(1, nchar(s), by=2), function(x) substr(s, x, x+1))
+rawToChar(as.raw(strtoi(h, 16L))) %>% cat
+hex2raw(s) %>% rawToChar() %>% cat
+hex2raw(s) %>% rawToChar() 
+hex2raw(s) %>% rawToChar() %>% iconv(., from = "UTF-8", to = "big5")
+charToRaw(" ")
+"餘生" %>% URLencode()
+"餘生" %>% iconv(., from = "big5", to = "UTF-8") %>% URLencode()
+"%be%6c%a5%cd" %>% URLdecode()
+"%e9%a4%98%e7%94%9f" %>% URLdecode()
+
+
+
+
+```
+
+END
+===
+
+```{r}
+tmp <- paste0("https://api.zhconvert.org/convert?converter=Taiwan&text=公交車&prettify=1") %>% 
+  iconv(., from = "big5", to = "UTF-8")
+tmp %>% Encoding()
+tmp
+tmp01 <- POST(tmp)
+tmp01
+# tmp01$url
+# tmp01$headers
+# tmp01$all_headers
+# tmp01$cookies
+
+tmp03 <- tmp02 %>% iconv(., from = "UTF-8", to = "big5") %>% fromJSON
+tmp03$data$text
+```
+

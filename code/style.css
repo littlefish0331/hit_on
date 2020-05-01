@@ -1,0 +1,26 @@
+/* Whole document: */
+body{
+  font-family: "Consolas", "Microsoft JhengHei";
+  font-size: 12pt;
+}
+
+/* Headers */
+h1,{
+  font-family: "Lucida Console";
+  font-size: 26pt;
+}h2,{
+  font-family: "Lucida Console";
+  font-size: 24pt;
+}h3,{
+  font-family: "Lucida Console";
+  font-size: 22pt;
+}h4,{
+  font-family: "Lucida Console";
+  font-size: 20pt;
+},h5{
+  font-family: "Lucida Console";
+  font-size: 18pt;
+},h6{
+  font-family: "Lucida Console";
+  font-size: 14pt;
+}

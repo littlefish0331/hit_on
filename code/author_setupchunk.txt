@@ -1,0 +1,125 @@
+author: "Author: [Steve, Yu](https://github.com/littlefish0331)"
+date: "`r Sys.setlocale('LC_TIME', 'English'); format(Sys.time(), '%Y %b %d %a, %H:%M:%S')`" 
+
+
+
+# ---
+output: 
+  bookdown::html_document2:
+    css: style.css
+    code_folding: show
+    df_print: default
+    toc: TRUE
+    toc_depth: 3
+    toc_float:
+      collapsed: TRUE
+      smooth_scroll: TRUE
+    theme: darkly
+    # theme: lumen
+    # keep_md: TRUE
+
+
+```{r setup, echo=TRUE, message=FALSE, warning=FALSE, results='hide'}
+rm(list = ls()); gc()
+library(knitr)
+library(kableExtra)
+library(dplyr)
+library(data.table)
+knitr::opts_chunk$set(
+	# 這邊是針對所有chunk的設定
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+
+# ---
+output:
+  rmdformats::readthedown:
+    css: style.css
+    self_contained: TRUE
+    thumbnails: FALSE
+    lightbox: TRUE
+    gallery: FALSE
+    highlight: tango #探戈橘
+    code_folding: show
+    toc_depth: 3
+
+# 本次嘗試使用另一種模板，vignettes連結如下
+# https://cran.r-project.org/web/packages/rmdformats/vignettes/introduction.html
+# 而且因為htmltools必須為0.4.0版本
+# 所以無法使用 MROpen 或是 MRClient
+
+
+
+# ---
+htmle格式設定
+http://www.datadreaming.org/post/r-markdown-theme-gallery/
+default, cerulean, journal, flatly, darkly, 
+readable, spacelab, united, cosmo, lumen, 
+paper, sandstone, simplex, yeti
+
+
+
+# ---
+markdown table 排版快速器
+https://www.tablesgenerator.com/markdown_tables#
+
+
+# ---
+<p style="color:yellow">**本套件最準的函式。**</p>
+<font style="color:red">第一個</font>
+水藍色 #1E90FF
+
+#---
+geometry: "left = 1.8cm, right = 1.8cm, top = 2.2cm, bottom = 2.2cm"
+fontsize: 12 pt
+linestretch: 1.5
+classoption: "a4paper,oneside"
+toccolor: 'red'
+urlcolor: 'blue'
+output:
+  pdf_document:
+    latex_engine: xelatex
+    includes:
+      in_header: header.tex
+    fig_caption: yes
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+
+
+#---
+對PDF沒有用
+<center>
+![](./pic/pic13.jpg){width=500px}
+</center>
+
+\begin{center}
+\includegraphics[width=0.8\textwidth]{./pic/pic13.jpg}
+\end{center}
+
+#---
+#caption所導致的編號，只會按照有caption的表格去計數。
+fread("data_tmp/smile_stop_tmp.csv", encoding = "UTF-8") %>% .[1, ] %>% 
+  kable(., "latex", booktabs = T, caption = "公車站牌資料 bus-stops data") %>%
+  kable_styling(position = "center", latex_options = c("striped", "hold_position"))
+
+fread("data_tmp/table_name.csv") %>% 
+  kable(., "latex", booktabs = T) %>%
+  add_header_above(c(" ", "資料表" = 3)) %>%
+  kable_styling(position = "center", latex_options = c("hold_position"))
+
+這個只對html有用。
+<center>
+![](./pic/table_name.jpg){width=550}
+</center>
+
+
+#---
+\textcolor{Maroon}{赭紅色}
+
+#---
+LaTeX Warning: `!h' float specifier changed to `!ht'. 
+這個bug我處理不了，是和表格有關的。

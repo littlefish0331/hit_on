@@ -1,0 +1,36 @@
+%\usepackage{fontspec} %加這個就可以設定字體
+\usepackage{xeCJK} %讓中英文字體分開設置
+%\usepackage{indentfirst} %加上這個第一段才會空兩格。\noindent加在該段前面，可以取消該段的空兩個。
+%\usepackage{float} %use the 'float' package
+
+%cmd指令找字體>>fc-list :lang=zh
+\setmainfont{Times New Roman} %設定英文字體，初始為Computer Modern，但是要額外下載。
+%\defaultCJKfontfeatures{AutoFakeBold=6, AutoFakeSlant=.4} %以後不用再設定粗斜
+\setCJKmainfont{Microsoft JhengHei}
+\setCJKsansfont{Microsoft JhengHei}%xeCJK裡面\secCJKsansfont需要顯示定義
+\setCJKmonofont{Microsoft JhengHei}%設定中文為系統上的字型，而英文不去更動，使用原TeX字型
+
+\usepackage{xcolor}
+%\setlength{\parindent}{2em} %會讓每段空兩個，但是第一段除外。
+\definecolor{shadecolor}{rgb}{.9, .9, .9} %程式區塊的背景顏色
+
+%解決 R markdown 的heading 4問題。
+\makeatletter %'@' is now a normal "letter" for TeX
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+        {-2.5ex\@plus -1ex \@minus -.25ex}%
+        {1.25ex \@plus .25ex}%
+        {\normalfont\normalsize\bfseries}}
+\makeatother %'@' is restored as a "non-letter" character for TeX
+\setcounter{secnumdepth}{4} % how many sectioning levels to assign numbers to
+
+
+
+
+%
+%\usepackage{fontspec} %加這個就可以設定字體
+%\usepackage{xeCJK} %讓中英文字體分開設置
+%\setCJKmainfont{Microsoft YaHei} %設定中文為系統上的字型，而英文不去更動，使用原TeX字型
+%\XeTeXlinebreaklocale "zh" %這兩行一定要加，中文才能自動換行。%表示用中文的斷行
+%\XeTeXlinebreakskip = 0pt plus 1pt %這兩行一定要加，中文才能自動換行。%預留調整的空間
+
+
